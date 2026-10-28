@@ -1,0 +1,44 @@
+name: Source connectivity probe
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Public job source to probe
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - albamon
+          - alba
+permissions:
+  contents: read
+concurrency:
+  group: source-probe-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: "3.12"
+      - run: python -m pip install '.[test]'
+      - run: python -m pytest -q
+      - run: python -m playwright install --with-deps chromium
+      - name: Probe public listing and two details per source
+        env:
+          PROBE_SOURCE: ${{ inputs.source }}
+        run: python -m alba_collector probe --source "$PROBE_SOURCE" --pages 1 --limit 2 --output reports
+      - name: Preserve aggregate report, including failures
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: connectivity-report-${{ github.run_id }}
+          path: reports/report.json
+          if-no-files-found: warn
+          retention-days: 7

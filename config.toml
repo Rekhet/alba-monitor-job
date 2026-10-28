@@ -1,0 +1,11 @@
+# Regions match the actual workplace address, not the listing advertisement area.
+regions = ["서울", "경기"]
+industries = []
+keywords = []
+exclude_keywords = []
+sources = ["albamon", "alba"]
+pages_per_source = 2
+max_details_per_source = 10
+request_delay_seconds = 2
+timeout_seconds = 30
+collect_body = true
